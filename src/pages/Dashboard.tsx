@@ -166,7 +166,7 @@ const Dashboard = () => {
         const formData = new FormData();
         formData.append('image', selectedProjectImage);
         const uploadResponse = await api.post('/upload/image', formData);
-        imageUrl = `http://localhost:9999${uploadResponse.data.data.url}`;
+        imageUrl = `https://arwamohamedsalah.onrender.com${uploadResponse.data.data.url}`;
         setUploadingProjectImage(false);
       }
 
@@ -1368,7 +1368,7 @@ const Dashboard = () => {
                         )}
                       </div>
                       <a
-                        href={`http://localhost:9999${resume.url}`}
+                        href={`https://arwamohamedsalah.onrender.com${resume.url}`}
                         download
                         className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-all ${
                           isDark ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-indigo-600 hover:bg-indigo-700 text-white'

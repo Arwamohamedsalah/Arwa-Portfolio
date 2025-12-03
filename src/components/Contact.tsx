@@ -51,7 +51,7 @@ const Contact = () => {
     setSubmitStatus({ type: null, message: '' });
     
     try {
-      const response = await fetch('http://localhost:9999/api/contact', {
+      const response = await fetch('https://arwamohamedsalah.onrender.com/api/contact', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -20,7 +20,7 @@ const Hero = () => {
     try {
       const response = await api.get('/upload/resume');
       if (response.data.success) {
-        setResumeUrl(`http://localhost:9999${response.data.data.url}`);
+        setResumeUrl(`https://arwamohamedsalah.onrender.com${response.data.data.url}`);
       }
     } catch (error) {
       // Resume not found, that's okay
