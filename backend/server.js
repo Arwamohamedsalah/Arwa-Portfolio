@@ -18,7 +18,15 @@ const PORT = process.env.PORT || 9999;
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000'],
+  origin: [
+    'http://localhost:5173', 
+    'http://localhost:5174', 
+    'http://localhost:3000',
+    'https://arwamohamedsalah.onrender.com',
+    /^https?:\/\/.*\.onrender\.com$/, // Allow all Render.com subdomains
+    /^https?:\/\/.*\.vercel\.app$/, // Allow all Vercel deployments
+    /^https?:\/\/.*\.netlify\.app$/ // Allow all Netlify deployments
+  ],
   credentials: true
 }));
 app.use(express.json());
@@ -39,6 +47,12 @@ mongoose.connect(MONGODB_URI, {
 
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+  next();
+});
 
 // Routes
 app.use('/api/contact', contactRoutes);
@@ -68,9 +82,12 @@ app.use((error, req, res, next) => {
 
 // 404 handler
 app.use('*', (req, res) => {
+  console.log(`404 - Route not found: ${req.method} ${req.originalUrl}`);
   res.status(404).json({
     success: false,
-    message: 'Route not found'
+    message: 'Route not found',
+    path: req.originalUrl,
+    method: req.method
   });
 });
 
