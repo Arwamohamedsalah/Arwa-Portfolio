@@ -61,6 +61,22 @@ app.use('/api/projects', projectRoutes);
 app.use('/api/sections', sectionRoutes);
 app.use('/api/upload', uploadRoutes);
 
+// Root endpoint
+app.get('/', (req, res) => {
+  res.status(200).json({ 
+    message: 'Portfolio API is running!',
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      health: '/api/health',
+      contact: '/api/contact',
+      auth: '/api/auth',
+      projects: '/api/projects',
+      sections: '/api/sections',
+      upload: '/api/upload'
+    }
+  });
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.status(200).json({ 
