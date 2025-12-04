@@ -37,15 +37,21 @@ app.use(express.urlencoded({ extended: true }));
 // Use MongoDB Atlas for both development and production
 // To use local MongoDB, set MONGODB_URI environment variable to 'mongodb://localhost:27017/portfolio'
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://arwamohamedsalah05_db_user:Arwa%4056789@cluster0.dzf1tgl.mongodb.net/portfolio?retryWrites=true&w=majority';
+
+// Log the MongoDB URI being used (without password for security)
+const maskedURI = MONGODB_URI.replace(/:[^:@]+@/, ':****@');
+console.log('🔗 Connecting to MongoDB:', maskedURI);
+
 mongoose.connect(MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
 .then(() => {
-  console.log('Connected to MongoDB successfully!');
+  console.log('✅ Connected to MongoDB successfully!');
 })
 .catch((error) => {
-  console.error('MongoDB connection error:', error);
+  console.error('❌ MongoDB connection error:', error);
+  console.error('💡 Make sure MongoDB Atlas is accessible or MongoDB service is running locally');
 });
 
 // Serve uploaded files
