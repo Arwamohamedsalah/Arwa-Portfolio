@@ -135,21 +135,25 @@ app.use('/api', async (req, res, next) => {
   if (readyState === 0) {
     // If disconnected, try to reconnect
     console.log('⚠️  MongoDB disconnected, attempting to reconnect...');
-    connectDB();
+    if (!isConnecting) {
+      connectDB();
+    }
     
-    // Wait a bit for connection (max 2 seconds)
+    // Wait a bit for connection (max 3 seconds)
     let attempts = 0;
-    while (mongoose.connection.readyState !== 1 && attempts < 20) {
+    while (mongoose.connection.readyState !== 1 && attempts < 30) {
       await new Promise(resolve => setTimeout(resolve, 100));
       attempts++;
     }
     
-    // If still not connected, return 503
+    // If still not connected, return 503 with helpful message
     if (mongoose.connection.readyState !== 1) {
+      console.error(`❌ MongoDB still not connected after ${attempts * 100}ms. State: ${readyState}`);
       return res.status(503).json({
         success: false,
         message: 'Database connection not ready. Please try again in a moment.',
-        error: `MongoDB connection state: ${readyState} (0=disconnected, 1=connected, 2=connecting)`
+        error: `MongoDB connection state: ${readyState} (0=disconnected, 1=connected, 2=connecting)`,
+        hint: 'Check MongoDB Atlas connection or ensure MongoDB service is running'
       });
     }
   }
@@ -167,10 +171,23 @@ app.use('/api/upload', uploadRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
+  const dbStatus = mongoose.connection.readyState;
+  const dbStatusText = {
+    0: 'disconnected',
+    1: 'connected',
+    2: 'connecting',
+    3: 'disconnecting'
+  };
+  
   res.status(200).json({ 
     message: 'Portfolio Contact API is running successfully!',
     timestamp: new Date().toISOString(),
-    status: 'healthy'
+    status: 'healthy',
+    database: {
+      status: dbStatusText[dbStatus] || 'unknown',
+      readyState: dbStatus,
+      connected: dbStatus === 1
+    }
   });
 });
 
