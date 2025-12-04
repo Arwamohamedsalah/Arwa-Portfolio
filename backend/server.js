@@ -8,6 +8,7 @@ const projectRoutes = require('./routes/projects');
 const sectionRoutes = require('./routes/sections');
 const uploadRoutes = require('./routes/upload');
 const path = require('path');
+const fs = require('fs');
 // const emailService = require('./services/emailService'); // Temporarily disabled due to module conflict
 
 // Load environment variables
@@ -72,17 +73,14 @@ app.get('/api/health', (req, res) => {
 
 // Serve static files from dist folder (frontend)
 const distPath = path.join(__dirname, '..', 'dist');
-app.use(express.static(distPath));
 
-// Error handling middleware
-app.use((error, req, res, next) => {
-  console.error('Error:', error);
-  res.status(500).json({
-    success: false,
-    message: 'Internal server error',
-    error: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
-  });
-});
+// Check if dist folder exists before serving static files
+if (fs.existsSync(distPath)) {
+  app.use(express.static(distPath));
+  console.log('✅ Frontend files will be served from dist folder');
+} else {
+  console.warn('⚠️  dist folder not found. Frontend files will not be served.');
+}
 
 // 404 handler for API routes only (must be before catch-all route)
 app.use('/api/*', (req, res) => {
@@ -96,9 +94,47 @@ app.use('/api/*', (req, res) => {
 });
 
 // Serve index.html for all non-API routes (React Router fallback)
-app.get('*', (req, res) => {
-  // Serve index.html for all non-API routes
-  res.sendFile(path.join(distPath, 'index.html'));
+app.get('*', (req, res, next) => {
+  // Skip API routes
+  if (req.path.startsWith('/api')) {
+    return next();
+  }
+  
+  // Check if dist folder and index.html exist
+  const indexPath = path.join(distPath, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath, (err) => {
+      if (err) {
+        console.error('Error sending index.html:', err);
+        return next(err);
+      }
+    });
+  } else {
+    // If dist folder doesn't exist, return API info
+    res.status(200).json({ 
+      message: 'Portfolio API is running!',
+      timestamp: new Date().toISOString(),
+      endpoints: {
+        health: '/api/health',
+        contact: '/api/contact',
+        auth: '/api/auth',
+        projects: '/api/projects',
+        sections: '/api/sections',
+        upload: '/api/upload'
+      },
+      note: 'Frontend files not found. Please build the frontend and ensure dist folder exists.'
+    });
+  }
+});
+
+// Error handling middleware (must be last)
+app.use((error, req, res, next) => {
+  console.error('Error:', error);
+  res.status(500).json({
+    success: false,
+    message: 'Internal server error',
+    error: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
+  });
 });
 
 // Start server
