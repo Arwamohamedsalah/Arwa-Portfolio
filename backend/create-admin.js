@@ -4,8 +4,7 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-// Use MongoDB Atlas for both development and production
-// To use local MongoDB, set MONGODB_URI environment variable to 'mongodb://localhost:27017/portfolio'
+// Use MongoDB Atlas for production
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://arwamohamedsalah05_db_user:Arwa%4056789@cluster0.dzf1tgl.mongodb.net/portfolio?retryWrites=true&w=majority';
 
 async function createAdmin() {
