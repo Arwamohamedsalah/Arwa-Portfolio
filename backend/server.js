@@ -42,16 +42,37 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://arwamohamedsalah05
 const maskedURI = MONGODB_URI.replace(/:[^:@]+@/, ':****@');
 console.log('🔗 Connecting to MongoDB:', maskedURI);
 
-mongoose.connect(MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => {
-  console.log('✅ Connected to MongoDB successfully!');
-})
-.catch((error) => {
-  console.error('❌ MongoDB connection error:', error);
-  console.error('💡 Make sure MongoDB Atlas is accessible or MongoDB service is running locally');
+// MongoDB connection with retry logic
+const connectDB = async () => {
+  try {
+    await mongoose.connect(MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+      socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
+    });
+    console.log('✅ Connected to MongoDB successfully!');
+  } catch (error) {
+    console.error('❌ MongoDB connection error:', error);
+    console.error('💡 Make sure MongoDB Atlas is accessible or MongoDB service is running locally');
+    // Don't exit the process, let the app continue and retry on next request
+  }
+};
+
+connectDB();
+
+// Handle MongoDB connection events
+mongoose.connection.on('error', (err) => {
+  console.error('❌ MongoDB connection error:', err);
+});
+
+mongoose.connection.on('disconnected', () => {
+  console.warn('⚠️  MongoDB disconnected. Attempting to reconnect...');
+  connectDB();
+});
+
+mongoose.connection.on('reconnected', () => {
+  console.log('✅ MongoDB reconnected successfully!');
 });
 
 // Serve uploaded files
@@ -60,6 +81,18 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Request logging middleware
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+  next();
+});
+
+// MongoDB connection check middleware
+app.use('/api', (req, res, next) => {
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({
+      success: false,
+      message: 'Database connection not ready. Please try again in a moment.',
+      error: 'MongoDB connection state: ' + mongoose.connection.readyState
+    });
+  }
   next();
 });
 
