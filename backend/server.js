@@ -117,10 +117,10 @@ app.use((req, res, next) => {
   next();
 });
 
-// MongoDB connection check middleware (only for non-health endpoints)
-app.use('/api', async (req, res, next) => {
+// MongoDB connection check middleware (for API endpoints and direct routes)
+const dbCheckMiddleware = async (req, res, next) => {
   // Allow health check endpoint to work even if DB is not connected
-  if (req.path === '/health' || req.path === '/health/') {
+  if (req.path === '/health' || req.path === '/health/' || req.path === '/api/health' || req.path === '/api/health/') {
     return next();
   }
   
@@ -156,7 +156,15 @@ app.use('/api', async (req, res, next) => {
   
   // Allow requests if connecting (2) or connected (1)
   next();
-});
+};
+
+// Apply middleware to both /api routes and direct routes
+app.use('/api', dbCheckMiddleware);
+app.use('/projects', dbCheckMiddleware);
+app.use('/contact', dbCheckMiddleware);
+app.use('/auth', dbCheckMiddleware);
+app.use('/sections', dbCheckMiddleware);
+app.use('/upload', dbCheckMiddleware);
 
 // Routes
 app.use('/api/contact', contactRoutes);
@@ -165,8 +173,37 @@ app.use('/api/projects', projectRoutes);
 app.use('/api/sections', sectionRoutes);
 app.use('/api/upload', uploadRoutes);
 
+// Direct routes (without /api prefix) for convenience - redirect to /api routes
+app.use('/projects', projectRoutes);
+app.use('/contact', contactRoutes);
+app.use('/auth', authRoutes);
+app.use('/sections', sectionRoutes);
+app.use('/upload', uploadRoutes);
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
+  const dbStatus = mongoose.connection.readyState;
+  const dbStatusText = {
+    0: 'disconnected',
+    1: 'connected',
+    2: 'connecting',
+    3: 'disconnecting'
+  };
+  
+  res.status(200).json({ 
+    message: 'Portfolio Contact API is running successfully!',
+    timestamp: new Date().toISOString(),
+    status: 'healthy',
+    database: {
+      status: dbStatusText[dbStatus] || 'unknown',
+      readyState: dbStatus,
+      connected: dbStatus === 1
+    }
+  });
+});
+
+// Health check endpoint (direct route without /api)
+app.get('/health', (req, res) => {
   const dbStatus = mongoose.connection.readyState;
   const dbStatusText = {
     0: 'disconnected',

@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-// Production API URL
+// Production API URL - Full backend URL
+// This ensures all API calls use the complete backend URL: https://arwamohamedsalah.onrender.com/api
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://arwamohamedsalah.onrender.com/api';
 
 const api = axios.create({
