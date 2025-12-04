@@ -77,6 +77,11 @@ app.get('/', (req, res) => {
   });
 });
 
+// Favicon endpoint (to avoid 404 errors)
+app.get('/favicon.ico', (req, res) => {
+  res.status(204).end();
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.status(200).json({ 
