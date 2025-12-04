@@ -174,17 +174,6 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Serve static files from dist folder (frontend)
-const distPath = path.join(__dirname, '..', 'dist');
-
-// Check if dist folder exists before serving static files
-if (fs.existsSync(distPath)) {
-  app.use(express.static(distPath));
-  console.log('✅ Frontend files will be served from dist folder');
-} else {
-  console.warn('⚠️  dist folder not found. Frontend files will not be served.');
-}
-
 // 404 handler for API routes only (must be before catch-all route)
 app.use('/api/*', (req, res) => {
   console.log(`404 - Route not found: ${req.method} ${req.originalUrl}`);
@@ -195,6 +184,17 @@ app.use('/api/*', (req, res) => {
     method: req.method
   });
 });
+
+// Serve static files from dist folder (frontend)
+const distPath = path.join(__dirname, '..', 'dist');
+
+// Check if dist folder exists before serving static files
+if (fs.existsSync(distPath)) {
+  app.use(express.static(distPath));
+  console.log('✅ Frontend files will be served from dist folder');
+} else {
+  console.warn('⚠️  dist folder not found. Frontend files will not be served.');
+}
 
 // Serve index.html for all non-API routes (React Router fallback)
 app.get('*', (req, res, next) => {
