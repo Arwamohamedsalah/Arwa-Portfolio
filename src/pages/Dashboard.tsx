@@ -248,7 +248,7 @@ const Dashboard = () => {
       const uploadResponse = await api.post('/upload/image', formData);
 
       // Get the uploaded image URL
-      const imageUrl = `http://localhost:9999${uploadResponse.data.data.url}`;
+      const imageUrl = `https://arwamohamedsalah.onrender.com${uploadResponse.data.data.url}`;
 
       // Add image to about section
       await api.post('/sections/about/images', {
