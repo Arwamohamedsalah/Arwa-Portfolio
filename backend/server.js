@@ -36,7 +36,7 @@ app.use(express.urlencoded({ extended: true }));
 // MongoDB Connection
 // Use MongoDB Atlas for both development and production
 // To use local MongoDB, set MONGODB_URI environment variable to 'mongodb://localhost:27017/portfolio'
-const DEFAULT_MONGODB_URI = 'mongodb+srv://arwamohamedsalah05_db_user:Arwa%4056789@cluster0.dzf1tgl.mongodb.net/portfolio?retryWrites=true&w=majority';
+const DEFAULT_MONGODB_URI = 'mongodb+srv://arwamohamedsalah05_db_user:Arwa%4056789@cluster0.dzf1tgl.mongodb.net/portfolio?retryWrites=true&w=majority'; // Password: Arwa@56789 (encoded as Arwa%4056789)
 
 // Get MongoDB URI from environment or use default
 let MONGODB_URI = process.env.MONGODB_URI || DEFAULT_MONGODB_URI;
