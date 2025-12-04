@@ -61,27 +61,6 @@ app.use('/api/projects', projectRoutes);
 app.use('/api/sections', sectionRoutes);
 app.use('/api/upload', uploadRoutes);
 
-// Root endpoint
-app.get('/', (req, res) => {
-  res.status(200).json({ 
-    message: 'Portfolio API is running!',
-    timestamp: new Date().toISOString(),
-    endpoints: {
-      health: '/api/health',
-      contact: '/api/contact',
-      auth: '/api/auth',
-      projects: '/api/projects',
-      sections: '/api/sections',
-      upload: '/api/upload'
-    }
-  });
-});
-
-// Favicon endpoint (to avoid 404 errors)
-app.get('/favicon.ico', (req, res) => {
-  res.status(204).end();
-});
-
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.status(200).json({ 
@@ -90,6 +69,10 @@ app.get('/api/health', (req, res) => {
     status: 'healthy'
   });
 });
+
+// Serve static files from dist folder (frontend)
+const distPath = path.join(__dirname, '..', 'dist');
+app.use(express.static(distPath));
 
 // Error handling middleware
 app.use((error, req, res, next) => {
@@ -101,8 +84,8 @@ app.use((error, req, res, next) => {
   });
 });
 
-// 404 handler
-app.use('*', (req, res) => {
+// 404 handler for API routes only (must be before catch-all route)
+app.use('/api/*', (req, res) => {
   console.log(`404 - Route not found: ${req.method} ${req.originalUrl}`);
   res.status(404).json({
     success: false,
@@ -110,6 +93,12 @@ app.use('*', (req, res) => {
     path: req.originalUrl,
     method: req.method
   });
+});
+
+// Serve index.html for all non-API routes (React Router fallback)
+app.get('*', (req, res) => {
+  // Serve index.html for all non-API routes
+  res.sendFile(path.join(distPath, 'index.html'));
 });
 
 // Start server
