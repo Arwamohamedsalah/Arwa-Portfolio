@@ -21,11 +21,16 @@ const PORT = process.env.PORT || 10000;
 app.use(cors({
   origin: [
     'https://arwamohamedsalah.onrender.com',
+    'https://arwamohamedsalah-portfolio.onrender.com', // Frontend URL
     /^https?:\/\/.*\.onrender\.com$/, // Allow all Render.com subdomains
     /^https?:\/\/.*\.vercel\.app$/, // Allow all Vercel deployments
-    /^https?:\/\/.*\.netlify\.app$/ // Allow all Netlify deployments
+    /^https?:\/\/.*\.netlify\.app$/, // Allow all Netlify deployments
+    'http://localhost:5173', // Local development
+    'http://localhost:3000' // Alternative local port
   ],
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
