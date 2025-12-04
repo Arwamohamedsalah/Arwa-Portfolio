@@ -110,8 +110,8 @@ app.use('*', (req, res) => {
 // Start server
 app.listen(PORT, async () => {
   console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
-  console.log(`📧 Contact API: http://localhost:${PORT}/api/contact`);
+  console.log(`📊 Health check: /api/health`);
+  console.log(`📧 Contact API: /api/contact`);
   
   // Test email service configuration
   if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
