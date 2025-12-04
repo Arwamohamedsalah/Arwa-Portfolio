@@ -46,22 +46,45 @@ console.log('📝 MONGODB_URI from env:', process.env.MONGODB_URI ? 'SET (using 
 console.log('🔍 Full URI (first 50 chars):', MONGODB_URI.substring(0, 50) + '...');
 
 // MongoDB connection with retry logic
-const connectDB = async () => {
+let isConnecting = false;
+const connectDB = async (retryCount = 0) => {
+  // Prevent multiple simultaneous connection attempts
+  if (isConnecting) {
+    return;
+  }
+  
+  // If already connected, don't reconnect
+  if (mongoose.connection.readyState === 1) {
+    return;
+  }
+  
+  isConnecting = true;
   try {
+    console.log(`🔄 Attempting to connect to MongoDB (attempt ${retryCount + 1})...`);
     await mongoose.connect(MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+      serverSelectionTimeoutMS: 10000, // Timeout after 10s
       socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
     });
     console.log('✅ Connected to MongoDB successfully!');
+    isConnecting = false;
   } catch (error) {
-    console.error('❌ MongoDB connection error:', error);
+    isConnecting = false;
+    console.error('❌ MongoDB connection error:', error.message);
     console.error('💡 Make sure MongoDB Atlas is accessible or MongoDB service is running locally');
-    // Don't exit the process, let the app continue and retry on next request
+    
+    // Retry after 5 seconds if not connected
+    if (retryCount < 5) {
+      console.log(`⏳ Retrying connection in 5 seconds... (${retryCount + 1}/5)`);
+      setTimeout(() => connectDB(retryCount + 1), 5000);
+    } else {
+      console.error('❌ Max retry attempts reached. Please check your MongoDB connection.');
+    }
   }
 };
 
+// Start connection
 connectDB();
 
 // Handle MongoDB connection events
@@ -87,15 +110,40 @@ app.use((req, res, next) => {
   next();
 });
 
-// MongoDB connection check middleware
-app.use('/api', (req, res, next) => {
-  if (mongoose.connection.readyState !== 1) {
-    return res.status(503).json({
-      success: false,
-      message: 'Database connection not ready. Please try again in a moment.',
-      error: 'MongoDB connection state: ' + mongoose.connection.readyState
-    });
+// MongoDB connection check middleware (only for non-health endpoints)
+app.use('/api', async (req, res, next) => {
+  // Allow health check endpoint to work even if DB is not connected
+  if (req.path === '/health' || req.path === '/health/') {
+    return next();
   }
+  
+  // For other endpoints, check connection but be more lenient
+  const readyState = mongoose.connection.readyState;
+  // 0 = disconnected, 1 = connected, 2 = connecting, 3 = disconnecting
+  
+  if (readyState === 0) {
+    // If disconnected, try to reconnect
+    console.log('⚠️  MongoDB disconnected, attempting to reconnect...');
+    connectDB();
+    
+    // Wait a bit for connection (max 2 seconds)
+    let attempts = 0;
+    while (mongoose.connection.readyState !== 1 && attempts < 20) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      attempts++;
+    }
+    
+    // If still not connected, return 503
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(503).json({
+        success: false,
+        message: 'Database connection not ready. Please try again in a moment.',
+        error: `MongoDB connection state: ${readyState} (0=disconnected, 1=connected, 2=connecting)`
+      });
+    }
+  }
+  
+  // Allow requests if connecting (2) or connected (1)
   next();
 });
 
