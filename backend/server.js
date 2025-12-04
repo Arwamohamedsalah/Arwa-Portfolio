@@ -36,11 +36,14 @@ app.use(express.urlencoded({ extended: true }));
 // MongoDB Connection
 // Use MongoDB Atlas for both development and production
 // To use local MongoDB, set MONGODB_URI environment variable to 'mongodb://localhost:27017/portfolio'
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://arwamohamedsalah05_db_user:Arwa%4056789@cluster0.dzf1tgl.mongodb.net/portfolio?retryWrites=true&w=majority';
+const DEFAULT_MONGODB_URI = 'mongodb+srv://arwamohamedsalah05_db_user:Arwa%4056789@cluster0.dzf1tgl.mongodb.net/portfolio?retryWrites=true&w=majority';
+const MONGODB_URI = process.env.MONGODB_URI || DEFAULT_MONGODB_URI;
 
 // Log the MongoDB URI being used (without password for security)
 const maskedURI = MONGODB_URI.replace(/:[^:@]+@/, ':****@');
 console.log('🔗 Connecting to MongoDB:', maskedURI);
+console.log('📝 MONGODB_URI from env:', process.env.MONGODB_URI ? 'SET (using env variable)' : 'NOT SET (using default)');
+console.log('🔍 Full URI (first 50 chars):', MONGODB_URI.substring(0, 50) + '...');
 
 // MongoDB connection with retry logic
 const connectDB = async () => {
