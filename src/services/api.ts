@@ -1,5 +1,7 @@
 import axios from 'axios';
 
+// Production API URL - defaults to production server
+// For local development, set VITE_API_URL=http://localhost:9999/api in .env file
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://arwamohamedsalah.onrender.com/api';
 
 const api = axios.create({
