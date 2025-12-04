@@ -37,7 +37,18 @@ app.use(express.urlencoded({ extended: true }));
 // Use MongoDB Atlas for both development and production
 // To use local MongoDB, set MONGODB_URI environment variable to 'mongodb://localhost:27017/portfolio'
 const DEFAULT_MONGODB_URI = 'mongodb+srv://arwamohamedsalah05_db_user:Arwa%4056789@cluster0.dzf1tgl.mongodb.net/portfolio?retryWrites=true&w=majority';
-const MONGODB_URI = process.env.MONGODB_URI || DEFAULT_MONGODB_URI;
+
+// Get MongoDB URI from environment or use default
+let MONGODB_URI = process.env.MONGODB_URI || DEFAULT_MONGODB_URI;
+
+// Safety check: If MONGODB_URI points to localhost in production, use default Atlas URI
+if (process.env.NODE_ENV === 'production' || !process.env.NODE_ENV) {
+  if (MONGODB_URI.includes('localhost') || MONGODB_URI.includes('127.0.0.1')) {
+    console.warn('⚠️  WARNING: MONGODB_URI points to localhost in production!');
+    console.warn('⚠️  Using default MongoDB Atlas connection instead.');
+    MONGODB_URI = DEFAULT_MONGODB_URI;
+  }
+}
 
 // Log the MongoDB URI being used (without password for security)
 const maskedURI = MONGODB_URI.replace(/:[^:@]+@/, ':****@');
